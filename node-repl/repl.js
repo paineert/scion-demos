@@ -1,41 +1,38 @@
 var repl = require('repl'),
-	fs = require('fs'),
-	scion = require('scion');
+    xml2jsonml = require('xml2jsonml'),
+    scion = require('scion');
 
-var scxmlJsonStr = fs.readFileSync(process.argv[2],'utf8');
+//1 - 2. get the xml file and convert it to jsonml
+xml2jsonml.parseFile(process.argv[2],function(err,scxmlJson){
 
-try{
-	var scxmlJson = JSON.parse(scxmlJsonStr);
-}catch(e){
-	console.error(e);
-	process.exit(1);
-}
+    if(err){
+        throw err;
+    }
 
-//3. annotate him programmatically
-var annotatedScxmlJson = scion.annotateScxmlJson(scxmlJson);
+    //3. annotate jsonml
+    var annotatedScxmlJson = scion.annotator.transform(scxmlJson,true,true,true,true);
 
-//4. Convert the SCXML-JSON document to a statechart object model. This step essentially converts id labels to object references, parses JavaScript scripts and expressions embedded in the SCXML as js functions, and does some validation for correctness. 
-var model = scion.json2model(annotatedScxmlJson);
-//console.log("model",model)
+    //4. Convert the SCXML-JSON document to a statechart object model. This step essentially converts id labels to object references, parses JavaScript scripts and expressions embedded in the SCXML as js functions, and does some validation for correctness. 
+    var model = scion.json2model(annotatedScxmlJson); 
 
-//5. Use the statechart object model to instantiate an instance of the statechart interpreter. Optionally, we can pass to the construct an object to be used as the context object (the 'this' object) in script evaluation. Lots of other parameters are available.
-var interpreter = new scion.NodeInterpreter(model);
-//console.log("interpreter",interpreter);
+    //5. Use the statechart object model to instantiate an instance of the statechart interpreter. Optionally, we can pass to the construct an object to be used as the context object (the 'this' object) in script evaluation. Lots of other parameters are available.
+    var interpreter = new scion.scxml.NodeInterpreter(model);
 
-//7. Call the start method on the new intrepreter instance to start execution of the statechart.
-interpreter.start();
+    interpreter.start();
 
-//let's test it by printing current state
-console.log(interpreter.getConfiguration().iter());
+    console.log(interpreter.getConfiguration()); 
 
-var parseRE = /\((.*)\n\)/;
+    var parseRE = /\((.*)\n\)/;
 
-function processEvent(cmd,dontKnow,alsoDontKnow,callback){
-	var e = cmd.match(parseRE)[1];
-	interpreter.gen(new scion.Event(e));
-	conf = interpreter.getConfiguration();
-	callback(null,conf.iter());
-}
-	
-//start 
-repl.start('#',process.stdin,processEvent);
+    function processEvent(cmd,dontKnow,alsoDontKnow,callback){
+        var e = cmd.match(parseRE)[1];
+        interpreter.gen({name : e});
+        conf = interpreter.getConfiguration();
+        callback(null,conf);
+    }
+        
+    //start 
+    repl.start('#',process.stdin,processEvent);
+    
+});
+
