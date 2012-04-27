@@ -10,7 +10,7 @@ xml2jsonml.parseFile(process.argv[2],function(err,scxmlJson){
     }
 
     //3. annotate jsonml
-    var annotatedScxmlJson = scion.annotator.transform(scxmlJson,true,true,true,true);
+    var annotatedScxmlJson = scion.annotator.transform(scxmlJson);
 
     //4. Convert the SCXML-JSON document to a statechart object model. This step essentially converts id labels to object references, parses JavaScript scripts and expressions embedded in the SCXML as js functions, and does some validation for correctness. 
     var model = scion.json2model(annotatedScxmlJson); 
