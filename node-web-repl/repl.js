@@ -1,24 +1,18 @@
 var repl = require('repl'),
-    xml2jsonml = require('xml2jsonml'),
     scion = require('scion'),
     http = require('http'),
+    util = require('util'),
     q = require('querystring');
 
 //1 - 2. get the xml file and convert it to jsonml
-xml2jsonml.parseFile(process.argv[2],function(err,scxmlJson){
+scion.pathToModel(process.argv[2],function(err,model){
 
     if(err){
         throw err;
     }
 
-    //3. annotate jsonml
-    var annotatedScxmlJson = scion.annotator.transform(scxmlJson);
-
-    //4. Convert the SCXML-JSON document to a statechart object model. This step essentially converts id labels to object references, parses JavaScript scripts and expressions embedded in the SCXML as js functions, and does some validation for correctness. 
-    var model = scion.json2model(annotatedScxmlJson); 
-
-    //5. Use the statechart object model to instantiate an instance of the statechart interpreter. Optionally, we can pass to the construct an object to be used as the context object (the 'this' object) in script evaluation. Lots of other parameters are available.
-    var interpreter = new scion.scxml.NodeInterpreter(model);
+    //Use the statechart object model to instantiate an instance of the statechart interpreter. Optionally, we can pass to the construct an object to be used as the context object (the 'this' object) in script evaluation. Lots of other parameters are available.
+    var interpreter = new scion.SCXML(model);
 
     interpreter.start();
 
