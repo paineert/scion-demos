@@ -168,6 +168,8 @@ $(document).ready(function(){
                     //get the scxml document
                     scion.urlToModel("behaviour/canvas.xml" , function(err,model){
 
+                        if(err) throw err;
+
                         //instantiate statechart
                         var interpreter = new scion.SCXML(model,
                             {
